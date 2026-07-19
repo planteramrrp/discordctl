@@ -28,14 +28,14 @@ async def on_ready():
 
 def render_message(message):
 	authoruname = message.author
-	authordname = message.author.display_name
+	# authordname = message.author.display_name
 	# r = message.author.color.r
 	# g = message.author.color.g
 	# b = message.author.color.b
 	content = message.content
 	# datetime = message.created_at.strftime("%Y-%m-%d %H:%M:%S")
 	
-	print(f'{authordname}: {content}')	
+	print(f'{authoruname}: {content}')	
 
 async def get_history(chan, num):
 	return [message async for message in chan.history(limit=num)]
@@ -46,9 +46,7 @@ async def on_message(message):
 	guild = message.guild
 	if message.channel == channel:
 		try:
-			authoruname = message.author
-			authordname = message.author.display_name
-			print(f"{message.author.display_name}: {message.content}")
+			render_message(message)
 		except:
 			pass		
 
