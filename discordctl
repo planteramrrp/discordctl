@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export TOKEN=$(</home/rehaaandas/Code/discordctl/api)
+/home/rehaaandas/Code/discordctl/test.py

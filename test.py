@@ -7,6 +7,7 @@ import os
 from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout 
 from prompt_toolkit.formatted_text import ANSI
+import subprocess
 
 client = discord.Client()
 token = os.environ['TOKEN']
@@ -34,6 +35,20 @@ def render_message(message):
 	# b = message.author.color.b
 	content = message.content
 	# datetime = message.created_at.strftime("%Y-%m-%d %H:%M:%S")
+	if message.embeds:
+		for e in message.embeds:
+			url = e.url
+			try:
+				subprocess.run(["timg", url])
+			except:
+				pass
+	if message.attachments:
+		for a in message.attachments:
+			url = a.url
+			try:
+				subprocess.run(["timg", url])
+			except:
+				pass
 	
 	print(f'{authoruname}: {content}')	
 
