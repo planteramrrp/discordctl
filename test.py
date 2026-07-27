@@ -186,12 +186,6 @@ def input_loop():
 							result = future.result()
 							found = True
 							break
-				
-			if msg == "exit":
-				future = asyncio.run_coroutine_threadsafe(client.close(), client.loop)
-				result = future.result()
-				break
-
 			if msg.split()[0] == "open":
 				target = msg.split()[1]
 				future = asyncio.run_coroutine_threadsafe(client.fetch_guild(server.id), client.loop)
@@ -206,6 +200,13 @@ def input_loop():
 					result = future.result()
 				except:
 					pass
+			if msg.split()[0] == "clear":
+				subprocess.run(["clear"])
+
+			if msg == "exit":
+				future = asyncio.run_coroutine_threadsafe(client.close(), client.loop)
+				result = future.result()
+				break
 
 loop = threading.Thread(target=input_loop)
 loop.start()
