@@ -1,8 +1,10 @@
-#!/bin/python
-
 import discord
+from bs4 import BeautifulSoup
+import re
+import requests
 import asyncio
 import threading
+import textwrap
 import os
 from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout 
@@ -27,7 +29,27 @@ async def on_ready():
 	servers = await client.fetch_guilds()
 	servers = ["DM"] + servers
 
-def render_message(message):
+def ogimage(url):
+	headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"} 
+
+	response = requests.get(url, headers=headers, timeout=10)
+	soup = BeautifulSoup(response.text, "html.parser") 
+	image = soup.find("meta", property="og:image")
+	if image and image.get("content"): 
+		return image["content"] 
+	return None
+
+def ogvideo(url):
+	headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    
+	response = requests.get(url, headers=headers, timeout=10)
+	soup = BeautifulSoup(response.text, "html.parser") 
+	video = soup.find("meta", property="og:video")
+	if video and video.get("content"): 
+		return video["content"] 
+	return None
+
+async def render_message(message):
 	authoruname = message.author
 	# authordname = message.author.display_name
 	# r = message.author.color.r
@@ -38,6 +60,13 @@ def render_message(message):
 	if message.embeds:
 		for e in message.embeds:
 			url = e.url
+			ogimageurl = ogimage(url)
+			if ogimageurl:
+				url = ogimageurl
+			else:
+				ogvideourl = ogvideo(url)
+				if ogvideourl:
+					url = ogvideourl
 			try:
 				subprocess.run(["timg", url])
 			except:
@@ -50,6 +79,9 @@ def render_message(message):
 			except:
 				pass
 	
+	if message.reference:
+		reply = await channel.fetch_message(message.reference.message_id)
+		print(f'[ {reply.author}: {reply.content} ]')
 	print(f'{authoruname}: {content}')	
 
 async def get_history(chan, num):
@@ -61,7 +93,7 @@ async def on_message(message):
 	guild = message.guild
 	if message.channel == channel:
 		try:
-			render_message(message)
+			await render_message(message)
 		except:
 			pass		
 
@@ -76,7 +108,7 @@ def input_loop():
 		while True:
 			future = asyncio.run_coroutine_threadsafe(session.prompt_async(ANSI(f'\x1b[0;32mdiscordctl\x1b[0m:\x1b[0;32m/{server if server else ""}{"/" if server else ""}{(channel if isinstance(channel, discord.TextChannel) else channel.recipient.display_name.split(maxsplit=3)[-1]) if channel else ""}\x1b[0m$ ')), client.loop)
 			result = future.result()
-			msg = result 
+			msg = result.replace("\\n", "\n")
 			if msg == "ls" and not channel:
 				if not server:
 					for index, i in enumerate(servers):
@@ -129,11 +161,30 @@ def input_loop():
 				result = future.result()
 				history = result 
 				for i in history[::-1]:
-					render_message(i)
+					future = asyncio.run_coroutine_threadsafe(render_message(i), client.loop)
+					result = future.result()
+			repmatch = re.match(r'"(.+)"\s*;\s*(.+)', msg)
+			if repmatch:
+				reply = repmatch.group(1)
+				content = repmatch.group(2)
+				found = False
+				amount = 50
+				while not found:
+					amount = amount *2
+					future = asyncio.run_coroutine_threadsafe(get_history(channel, amount), client.loop)
+					result = future.result()
+					history = result
+					for i in history:
+						if i.content == reply:
+							future = asyncio.run_coroutine_threadsafe(i.reply(content), client.loop)
+							result = future.result()
+							found = True
+							break
+				
 			if msg == "exit":
 				future = asyncio.run_coroutine_threadsafe(client.close(), client.loop)
 				result = future.result()
-				break 
+				break
 
 loop = threading.Thread(target=input_loop)
 loop.start()
