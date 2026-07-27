@@ -207,8 +207,6 @@ def input_loop():
 				except:
 					pass
 
-			 # // add more server management features to fully cover discord featureset
-
 loop = threading.Thread(target=input_loop)
 loop.start()
 client.run(token)
