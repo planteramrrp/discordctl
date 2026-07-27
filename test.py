@@ -25,7 +25,7 @@ ready = False
 @client.event
 async def on_ready():
 	global servers
-	print("hi hello logged in as ", client.user)
+	print("hi hello logged in as", client.user.name)
 	servers = await client.fetch_guilds()
 	servers = ["DM"] + servers
 
@@ -50,7 +50,7 @@ def ogvideo(url):
 	return None
 
 async def render_message(message):
-	authoruname = message.author
+	authoruname = message.author.name
 	# authordname = message.author.display_name
 	# r = message.author.color.r
 	# g = message.author.color.g
@@ -81,7 +81,7 @@ async def render_message(message):
 	
 	if message.reference:
 		reply = await channel.fetch_message(message.reference.message_id)
-		print(f'[ {reply.author}: {reply.content} ]')
+		print(f'[ {reply.author.name}: {reply.content} ]')
 	print(f'{authoruname}: {content}')	
 
 async def get_history(chan, num):
@@ -106,7 +106,8 @@ def input_loop():
 	session = PromptSession()
 	with patch_stdout():
 		while True:
-			future = asyncio.run_coroutine_threadsafe(session.prompt_async(ANSI(f'\x1b[0;32mdiscordctl\x1b[0m:\x1b[0;32m/{server if server else ""}{"/" if server else ""}{(channel if isinstance(channel, discord.TextChannel) else channel.recipient.display_name.split(maxsplit=3)[-1]) if channel else ""}\x1b[0m$ ')), client.loop)
+			# future = asyncio.run_coroutine_threadsafe(session.prompt_async(ANSI(f'\x1b[0;32mdiscordctl\x1b[0m:\x1b[0;32m/{server if server else ""}{"/" if server else ""}{(channel if isinstance(channel, discord.TextChannel) else channel.recipient.name.split(maxsplit=3)[-1]) if channel else ""}\x1b[0m$ ')), client.loop)
+			future = asyncio.run_coroutine_threadsafe(session.prompt_async(ANSI(f'\x1b[0;32mdiscordctl\x1b[0m:\x1b[0;32m/{server if server else ""}{"/" if server else ""}{(channel if isinstance(channel, discord.TextChannel) else channel.recipient.name) if channel else ""}\x1b[0m$ ')), client.loop)
 			result = future.result()
 			msg = result.replace("\\n", "\n")
 			if msg == "ls" and not channel:
@@ -118,7 +119,7 @@ def input_loop():
 						print("0 ..")
 						for index, i in enumerate(channels):
 							if index > 0:
-								print(f'{index} {i.recipient.global_name}')	
+								print(f'{index} {i.recipient.name}')	
 					else:
 						print("0 ..")
 						for index, i in enumerate(channels):
@@ -185,6 +186,23 @@ def input_loop():
 				future = asyncio.run_coroutine_threadsafe(client.close(), client.loop)
 				result = future.result()
 				break
+
+			if msg.split()[0] == "open":
+				target = msg.split()[1]
+				future = asyncio.run_coroutine_threadsafe(client.fetch_guild(server.id), client.loop)
+				result = future.result()
+				future = asyncio.run_coroutine_threadsafe(result.query_members(target), client.loop)
+				result = future.result()[0]
+				# for u in result:
+					# if u.global_name == target:
+						# result = u
+				try:
+					future = asyncio.run_coroutine_threadsafe(result.create_dm(), client.loop)
+					result = future.result()
+				except:
+					pass
+
+			 # // add more server management features to fully cover discord featureset
 
 loop = threading.Thread(target=input_loop)
 loop.start()
