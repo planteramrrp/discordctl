@@ -25,9 +25,9 @@ ready = False
 @client.event
 async def on_ready():
 	global servers
-	print("hi hello logged in as", client.user.name)
 	servers = await client.fetch_guilds()
 	servers = ["DM"] + servers
+	print("hi hello logged in as", client.user.name)
 
 def ogimage(url):
 	headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"} 
@@ -106,10 +106,9 @@ def input_loop():
 	session = PromptSession()
 	with patch_stdout():
 		while True:
-			# future = asyncio.run_coroutine_threadsafe(session.prompt_async(ANSI(f'\x1b[0;32mdiscordctl\x1b[0m:\x1b[0;32m/{server if server else ""}{"/" if server else ""}{(channel if isinstance(channel, discord.TextChannel) else channel.recipient.name.split(maxsplit=3)[-1]) if channel else ""}\x1b[0m$ ')), client.loop)
 			future = asyncio.run_coroutine_threadsafe(session.prompt_async(ANSI(f'\x1b[0;32mdiscordctl\x1b[0m:\x1b[0;32m/{server if server else ""}{"/" if server else ""}{(channel if isinstance(channel, discord.TextChannel) else channel.recipient.name) if channel else ""}\x1b[0m$ ')), client.loop)
 			result = future.result()
-			msg = result.replace("\\n", "\n")
+			msg = result
 			if msg == "ls" and not channel:
 				if not server:
 					for index, i in enumerate(servers):
@@ -126,28 +125,34 @@ def input_loop():
 							if index > 0:
 								print(f'{index} {i.name}')	
 			if msg.split()[0] == "cd":
-				target = int(msg.split()[1])	
-				if not server:
-					if target == 0:
-						server = "DM"
-						future = asyncio.run_coroutine_threadsafe(client.fetch_private_channels(), client.loop)
-						result = future.result()
-						channels = [".."] + result
-					else:
-						server = servers[target]
-						future = asyncio.run_coroutine_threadsafe(client.fetch_guild(server.id), client.loop)
-						result = future.result()
-						future = asyncio.run_coroutine_threadsafe(result.fetch_channels(), client.loop)
-						result = future.result()
-						channels = [".."] + result
-				else:
-					if target == 0:
-						if channel:
-							channel = None
+				target = msg.split()[1]	
+				for i in target.split("/"):
+					try:
+						i = int(i)
+						if not server:
+							if i == 0:
+								server = "DM"
+								future = asyncio.run_coroutine_threadsafe(client.fetch_private_channels(), client.loop)
+								result = future.result()
+								channels = [".."] + result
+							else:
+								server = servers[i]
+								future = asyncio.run_coroutine_threadsafe(client.fetch_guild(server.id), client.loop)
+								result = future.result()
+								future = asyncio.run_coroutine_threadsafe(result.fetch_channels(), client.loop)
+								result = future.result()
+								channels = [".."] + result
 						else:
-							server = None
-					else:
-						channel = channels[target]
+							if i == 0:
+								if channel:
+									channel = None
+								else:
+									server = None
+							else:
+								channel = channels[i]
+					except:
+						pass
+
 			if msg.split(maxsplit=1)[0] == ";":
 				content = msg.split(maxsplit=1)[1]
 				if isinstance(channel, discord.TextChannel):
