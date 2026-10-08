@@ -1,5 +1,7 @@
 import discord
 from bs4 import BeautifulSoup
+from PIL import ImageGrab
+import io
 import re
 import requests
 import asyncio
@@ -102,6 +104,7 @@ def input_loop():
 	global channels
 	global server
 	global channel
+	attachments = []
 	
 	session = PromptSession()
 	with patch_stdout():
@@ -156,11 +159,13 @@ def input_loop():
 			if msg.split(maxsplit=1)[0] == ";":
 				content = msg.split(maxsplit=1)[1]
 				if isinstance(channel, discord.TextChannel):
-					future = asyncio.run_coroutine_threadsafe(channel.send(content), client.loop)
+					future = asyncio.run_coroutine_threadsafe(channel.send(content, files=attachments), client.loop)
 					result = future.result()
+					attachments = []
 				if isinstance(channel, discord.DMChannel):
-					future = asyncio.run_coroutine_threadsafe(channel.send(content), client.loop)
+					future = asyncio.run_coroutine_threadsafe(channel.send(content, files=attachments), client.loop)
 					result = future.result()
+					attachments = []
 			if msg.split()[0] == "history" and channel:
 				amount = int(msg.split()[1]) if len(msg.split())-1 else 100 
 				future = asyncio.run_coroutine_threadsafe(get_history(channel, amount), client.loop)
@@ -182,7 +187,7 @@ def input_loop():
 					history = result
 					for i in history:
 						if i.content == reply:
-							future = asyncio.run_coroutine_threadsafe(i.reply(content), client.loop)
+							future = asyncio.run_coroutine_threadsafe(i.reply(content, files=attachments), client.loop)
 							result = future.result()
 							found = True
 							break
@@ -202,6 +207,13 @@ def input_loop():
 					pass
 			if msg.split()[0] == "clear":
 				subprocess.run(["clear"])
+			if msg == "+":
+				img = ImageGrab.grabclipboard()
+				if img:
+					bytes_io = io.BytesIO()
+					img.save(bytes_io, format="PNG")
+					bytes_io.seek(0)
+					attachments.append(discord.File(fp=bytes_io, filename="clip.png"))
 
 			if msg == "exit":
 				future = asyncio.run_coroutine_threadsafe(client.close(), client.loop)

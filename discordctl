@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source /home/rehaaandas/Code/discordctl/.venv/bin/activate
-export TOKEN=$(</home/rehaaandas/Code/discordctl/api)
-python /home/rehaaandas/Code/discordctl/test.py
+source .venv/bin/activate
+export TOKEN=$(<api)
+python discordctl.py
