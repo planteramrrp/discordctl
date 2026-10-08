@@ -9,7 +9,7 @@
 ### Programs
 - `timg` (rendering images videos)
 - any sixel/kitty protocol supporting terminal emulator
-<hr>
+### Instructions
 - set `TOKEN` env var to discord token
 - run `./discordctl`
 # Usage
