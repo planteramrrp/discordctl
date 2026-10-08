@@ -131,14 +131,14 @@ def input_loop():
 				target = msg.split()[1]	
 				for i in target.split("/"):
 					try:
-						i = int(i)
 						if not server:
-							if i == 0:
+							if int(i) == 0 or i == "..":
 								server = "DM"
 								future = asyncio.run_coroutine_threadsafe(client.fetch_private_channels(), client.loop)
 								result = future.result()
 								channels = [".."] + result
 							else:
+								i = int(i)
 								server = servers[i]
 								future = asyncio.run_coroutine_threadsafe(client.fetch_guild(server.id), client.loop)
 								result = future.result()
@@ -146,18 +146,20 @@ def input_loop():
 								result = future.result()
 								channels = [".."] + result
 						else:
-							if i == 0:
+							if int(i) == 0 or i == "..":
 								if channel:
 									channel = None
 								else:
 									server = None
 							else:
+								i = int(i)
 								channel = channels[i]
 					except:
 						pass
 
 			if msg.split(maxsplit=1)[0] == ";":
-				content = msg.split(maxsplit=1)[1]
+				split = msg.split(maxsplit=1)
+				content = split[1] if len(split) > 1 else "ㅤ"
 				if isinstance(channel, discord.TextChannel):
 					future = asyncio.run_coroutine_threadsafe(channel.send(content, files=attachments), client.loop)
 					result = future.result()
@@ -174,7 +176,7 @@ def input_loop():
 				for i in history[::-1]:
 					future = asyncio.run_coroutine_threadsafe(render_message(i), client.loop)
 					result = future.result()
-			repmatch = re.match(r'"(.+)"\s*;\s*(.+)', msg)
+			repmatch = re.match(r'"(.+)"\s*;\s*(.*)', msg)
 			if repmatch:
 				reply = repmatch.group(1)
 				content = repmatch.group(2)
