@@ -16,7 +16,7 @@
 - `ls` list channels and servers
 - `cd [n]` go to channels and servers by indexed number
 - `cd 0` go back
-- `; message content` send message
+- `; message content` send message (note space is necessary and any message content is necessary removing it is an unsolved computer science problem)
 - `"reply content" ; message content` send replies
 - `open [user handle]` open dm
 - `clear` clear
